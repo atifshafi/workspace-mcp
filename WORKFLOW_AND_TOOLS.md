@@ -512,44 +512,18 @@ Summary of relationships:
 
 ## Configuration Reference
 
-`config.json` keys and impact:
+For complete `config.json` structure and options, see [README.md](README.md#%EF%B8%8F-configuration). Key behavioral impacts:
 
-- **workspaceRoot**: absolute path boundary for all operations; paths are validated to stay inside this root.
-- **appGlobs**: patterns used by the scanner to discover app roots. Each discovered app becomes a unit for capsule building and indexing.
-- **ignore**: `picomatch` patterns excluded everywhere (scanner, indexer, watchers).
-- **queue**:
-  - `maxConcurrentSummaries`: number of parallel capsule jobs.
-  - `summariesPerMinute`: drip rate to avoid spikes.
-  - `debounceMs`: coalesce file events before enqueue.
-  - `priorityPaths`: any app path starting with these receives higher priority.
-- **purpose**:
-  - `limits`: default budgets for non-git apps (maxFiles, maxBytes, timeout).
-  - `gitRepoOverrides`: larger budgets when inside a Git repo.
-- **activity**:
-  - `enable`: if true, promotes recently active subtrees.
-  - `sources`: `cursorIde`, `cursorSessions`, `fsMtime` control which signals are used.
-  - `promote`: thresholds controlling promotion density.
+- **`appGlobs`**: Defines what directories become "apps"
+- **`purpose.limits` vs `gitRepoOverrides`**: Different resource budgets for Git vs non-Git
+- **`queue`**: Controls processing rate limits and prioritization
+- **`activity`**: Enables intelligent promotion of frequently used apps
 
 ---
 
 ## Tooling Reference (MCP)
 
-All tools are registered under the `workspace.*` namespace:
-
-- `workspace.list_roots` → returns discovered app roots
-- `workspace.list_apps` → returns apps with built capsules in memory
-- `workspace.find_app(name, limit)` → fuzzy match app by name/rel path
-- `workspace.bootstrap(app, intent?, force?)` → build or refresh capsule for `app` (uses cache when available)
-- `workspace.list_entrypoints(app)` → list detected entrypoints for `app`
-- `workspace.describe_symbol(path)` → file head and top-level definitions (safe for large files)
-- `workspace.tests_for(app?)` → hot test files for the app (if any)
-- `workspace.owners(path?)` → placeholder ownership info
-- `workspace.search_semantic(query, app?, top_k?, min_score?, mode?)` → hybrid/BM25/semantic search
-
-Search modes:
-- `bm25` → keyword only
-- `semantic` → embeddings only
-- `hybrid` (default) → `score = 0.7 * semantic + 0.3 * bm25`
+For complete tool descriptions and parameters, see [README.md](README.md#%EF%B8%8F-available-tools). All tools use the `workspace.*` namespace and operate on cached capsules for optimal performance.
 
 ---
 

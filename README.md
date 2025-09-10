@@ -65,19 +65,9 @@ WORKSPACE_MCP_ROOT=/custom/path npx workspace-mcp init
 
 This MCP server provides intelligent workspace analysis through configurable project discovery, AI-powered summarization, and semantic search capabilities. It creates structured metadata for each discovered application, enabling efficient code understanding and contextual search.
 
-### 📁 What is an "App"?
+### 📁 App Discovery
 
-An **"app"** is any directory that matches your configured `appGlobs` patterns. The system discovers apps by:
-
-1. **📋 Pattern Matching**: Uses glob patterns like `apps/*`, `tools/*`, `packages/*`
-2. **🚫 Filtering**: Excludes directories in the `ignore` list
-3. **✔️ Validation**: Confirms each match is a readable directory
-
-**Examples**: If you configure `appGlobs: ["apps/*", "tools/*"]`, then:
-- `/workspace/apps/auth-service/` → Discovered as "auth-service" app
-- `/workspace/apps/payment-api/` → Discovered as "payment-api" app  
-- `/workspace/tools/cli-helper/` → Discovered as "cli-helper" app
-- `/workspace/docs/` → Ignored (doesn't match patterns)
+An **"app"** is any directory matching your `appGlobs` configuration patterns. See [WORKFLOW_AND_TOOLS.md](WORKFLOW_AND_TOOLS.md#-app-discovery-what-constitutes-an-app) for detailed discovery logic and examples.
 
 ### 🎯 The Problem It Solves
 
@@ -251,49 +241,7 @@ sequenceDiagram
 
 ### Capsule Structure
 
-```mermaid
-flowchart TB
-    subgraph Capsule ["📦 App Capsule"]
-        direction TB
-        
-        META["📋 Metadata<br/>• Purpose<br/>• Generated At<br/>• Token Budget"]
-        
-        ARCH["🏗️ Architecture<br/>• Key Modules<br/>• Flow Diagram<br/>• Dependencies"]
-        
-        ENTRY["🚪 Entrypoints<br/>• Main Files<br/>• CLI Scripts<br/>• Server Files"]
-        
-        DOCS["📚 Documentation<br/>• README<br/>• Architecture<br/>• Runbooks"]
-        
-        TESTS["🧪 Test Suite<br/>• Unit Tests<br/>• Integration<br/>• Hot Tests"]
-        
-        OWNERS["👥 Ownership<br/>• Team Info<br/>• Maintainers<br/>• Contacts"]
-        
-        AI["🤖 AI Analysis<br/>• Role Classification<br/>• Confidence Score<br/>• Evidence Paths"]
-    end
-    
-    META --> ARCH
-    ARCH --> ENTRY
-    ENTRY --> DOCS
-    DOCS --> TESTS
-    TESTS --> OWNERS
-    OWNERS --> AI
-    
-    classDef metadata fill:#e3f2fd,stroke:#333,stroke-width:2px,color:#000
-    classDef arch fill:#f1f8e9,stroke:#333,stroke-width:2px,color:#000
-    classDef entry fill:#fff3e0,stroke:#333,stroke-width:2px,color:#000
-    classDef docs fill:#fce4ec,stroke:#333,stroke-width:2px,color:#000
-    classDef tests fill:#e8f5e8,stroke:#333,stroke-width:2px,color:#000
-    classDef owners fill:#f3e5f5,stroke:#333,stroke-width:2px,color:#000
-    classDef ai fill:#fff8e1,stroke:#333,stroke-width:2px,color:#000
-
-    class META metadata
-    class ARCH arch
-    class ENTRY entry
-    class DOCS docs
-    class TESTS tests
-    class OWNERS owners
-    class AI ai
-```
+Each app produces a structured capsule containing metadata, entrypoints, tests, documentation, and AI analysis. See [WORKFLOW_AND_TOOLS.md](WORKFLOW_AND_TOOLS.md#-capsule-metadata-the-intelligence-behind-fast-queries) for detailed capsule structure and examples.
 
 ## ⚙️ Configuration
 
@@ -369,32 +317,9 @@ flowchart TB
 | `activity.enable` | - | Enable activity-based promotion | `true` |
 | `activity.promote.minScore` | - | Min score for promotion | `3.0` |
 
-### AI Summarization (default: Gemini → OpenAI → local)
+### AI Summarization
 
-- Enabled by default. To disable:
-```bash
-export WORKSPACE_MCP_AI=disabled
-# or
-export WORKSPACE_MCP_AI_DISABLE=1
-```
-- To use Gemini CLI (default priority):
-```bash
-export WORKSPACE_MCP_GEMINI_CLI=gemini
-export WORKSPACE_MCP_GEMINI_MODEL=gemini-1.5-flash
-export GOOGLE_API_KEY=your-gemini-api-key
-# Optional custom args template (tokens: {MODEL}, {PROMPT})
-# export WORKSPACE_MCP_GEMINI_ARGS="-m {MODEL} generate -p {PROMPT}"
-```
-- OpenAI fallback:
-```bash
-export OPENAI_API_KEY=sk-...
-export WORKSPACE_MCP_AI_MODEL=gpt-4o-mini
-```
-- Custom endpoint (lowest priority):
-```bash
-export WORKSPACE_MCP_AI_ENDPOINT=https://your-ai-endpoint/summarize
-export WORKSPACE_MCP_AI_AUTH="Bearer <TOKEN>"   # optional
-```
+AI summarization is enabled by default with Gemini → OpenAI → local fallback priority. For complete configuration options, disable instructions, and usage scenarios, see [WORKFLOW_AND_TOOLS.md](WORKFLOW_AND_TOOLS.md#-when-ai-services-are-used-vs-not-used-the-complete-guide).
 
 ## 🛠️ Available Tools
 
@@ -432,69 +357,11 @@ The server exposes the following MCP tools:
 
 ## 🔄 Queue Management
 
-### Processing Pipeline
-
-```mermaid
-flowchart LR
-    subgraph QueueSystem ["📋 Job Queue System"]
-        direction LR
-        
-        TRIGGER["⚡ File Changes<br/>📊 Activity<br/>🚀 Startup"]
-        
-        DEBOUNCE["⏱️ Debounce<br/>750ms window"]
-        
-        QUEUE["📋 Priority Queue<br/>• Priority 1: Priority paths<br/>• Priority 2: Standard<br/>• FIFO within priority"]
-        
-        RATE["🚦 Rate Limiter<br/>• 3 jobs/minute<br/>• 3 concurrent max"]
-        
-        PROCESS["🏭 Processing<br/>• Git detection<br/>• Metadata creation<br/>• AI summarization<br/>• Capsule caching"]
-        
-        TRIGGER --> DEBOUNCE
-        DEBOUNCE --> QUEUE
-        QUEUE --> RATE
-        RATE --> PROCESS
-    end
-    
-    classDef trigger fill:#ffecb3,stroke:#333,stroke-width:2px,color:#000
-    classDef debounce fill:#e1f5fe,stroke:#333,stroke-width:2px,color:#000
-    classDef queue fill:#f3e5f5,stroke:#333,stroke-width:2px,color:#000
-    classDef rate fill:#fff3e0,stroke:#333,stroke-width:2px,color:#000
-    classDef process fill:#e8f5e8,stroke:#333,stroke-width:2px,color:#000
-
-    class TRIGGER trigger
-    class DEBOUNCE debounce
-    class QUEUE queue
-    class RATE rate
-    class PROCESS process
-```
-
-### Activity-based Promotion
-
-The system tracks activity from multiple sources to promote frequently used applications:
-
-1. **Cursor IDE State** - Currently open files and workspaces
-2. **Cursor Sessions** - Historical session data
-3. **File System Activity** - Recently modified files (7-day window)
-
-Applications with activity scores above the threshold (`minScore: 3.0`) are automatically promoted for processing.
+The system uses rate-limited job queues with activity-based promotion. For detailed queue mechanics, refresh triggers, and performance optimization, see [WORKFLOW_AND_TOOLS.md](WORKFLOW_AND_TOOLS.md#-capsule-refresh-mechanisms-when-and-how-often).
 
 ## 📁 Cache Structure
 
-Capsules are cached in the `cache/` directory with hex-encoded filenames:
-
-```
-cache/
-├── capsule_2f70617468746f...796f7572617070732d7465737467656e657261746f72.json
-├── capsule_2f70617468746f...796f75726170707372657073677263756a.json
-└── telemetry.log
-```
-
-Each capsule contains:
-- Application metadata and purpose
-- Architecture overview with key modules
-- Detected entrypoints and documentation
-- Test suite information
-- AI analysis results
+Capsules are cached in the `cache/` directory with hex-encoded filenames. See [WORKFLOW_AND_TOOLS.md](WORKFLOW_AND_TOOLS.md#caching--persistence) for detailed caching mechanisms and cache hit/miss performance analysis.
 
 ## 🧪 Testing
 
@@ -579,14 +446,12 @@ node debug-bootstrap.js [app-path]
 ```
 workspace-mcp/
 ├── index.js              # Main MCP server implementation
-├── cli.js                # npx-style CLI (init/start/analyze --dry-run)
-├── config.json           # Workspace configuration (user-specific)
-├── package.json          # Node.js dependencies and bin entry
-├── debug-bootstrap.js    # Optional: capsule generator for a single app
+├── cli.js                # CLI (init/start/analyze --dry-run)
+├── gemini_cli.py         # Robust Gemini AI wrapper
+├── test_ai.js           # AI integration testing
+├── config.json          # Workspace configuration (user-specific)
 ├── cache/               # Capsule cache directory
-│   ├── capsule_*.json   # Individual app capsules
-│   └── telemetry.log    # Usage telemetry
-└── README.md           # This file
+└── docs/                # README.md + WORKFLOW_AND_TOOLS.md
 ```
 
 ### Key Dependencies
