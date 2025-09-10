@@ -82,29 +82,48 @@ async function tryGeminiCli(appPath, limits){
     // Check if Gemini API key is available
     if (!process.env.GOOGLE_API_KEY) return null;
     
-    const cmd = process.env.WORKSPACE_MCP_GEMINI_CLI || 'gemini';
-    const model = process.env.WORKSPACE_MCP_GEMINI_MODEL || 'gemini-1.5-flash';
-    const argsTpl = process.env.WORKSPACE_MCP_GEMINI_ARGS; // e.g., "-m {MODEL} generate -p {PROMPT}"
     const snippets = await collectRepresentativeSnippets(appPath, limits);
     if (snippets.length === 0) return null;
+    
+    const model = process.env.WORKSPACE_MCP_GEMINI_MODEL || 'gemini-1.5-flash';
     const prompt = `Summarize this app as a single sentence purpose. Return only the sentence. Files:` +
       snippets.map(s=>`\n### ${path.basename(s.path)}\n${s.text}`).join('\n');
-    let args;
-    if (argsTpl) {
-      args = argsTpl
-        .replaceAll('{MODEL}', model)
-        .replaceAll('{PROMPT}', prompt)
-        .split(' ');
-    } else {
-      // Default assumption for a gemini CLI: gemini -m <model> generate -p <prompt>
-      args = ['-m', model, 'generate', '-p', prompt];
+    
+    // Try multiple CLI options in order of preference
+    const cliOptions = [
+      // Option 1: Bundled Python wrapper (most robust)
+      { cmd: 'python3', args: [path.join(path.dirname(new URL(import.meta.url).pathname), 'gemini_cli.py'), '--model', model, '--prompt', prompt] },
+      // Option 2: Custom CLI from env
+      ...(process.env.WORKSPACE_MCP_GEMINI_CLI ? [{ 
+        cmd: process.env.WORKSPACE_MCP_GEMINI_CLI, 
+        args: process.env.WORKSPACE_MCP_GEMINI_ARGS ? 
+          process.env.WORKSPACE_MCP_GEMINI_ARGS.replaceAll('{MODEL}', model).replaceAll('{PROMPT}', prompt).split(' ') :
+          ['-m', model, 'generate', '-p', prompt]
+      }] : []),
+      // Option 3: Google AI Python CLI (if installed)
+      { cmd: 'genai', args: ['generate', '--model', model, '--prompt', prompt] },
+      // Option 4: Generic gemini CLI
+      { cmd: 'gemini', args: ['-m', model, 'generate', '-p', prompt] }
+    ];
+    
+    for (const option of cliOptions) {
+      try {
+        const result = await execCommand(option.cmd, option.args, null, 25000);
+        if (result && result.out && result.code === 0) {
+          const text = result.out.trim();
+          if (text && !text.toLowerCase().includes('error') && text.length > 10) {
+            logTelemetry({ type: 'ai_success', app: appPath, provider: 'gemini', cli: option.cmd });
+            return { purpose: text, role: 'mixed', confidence: 0.85, evidence_paths: snippets.map(s=>s.path).slice(0,5) };
+          }
+        }
+      } catch (e) {
+        // Try next option
+        continue;
+      }
     }
-    const result = await execCommand(cmd, args, null, 25000);
-    const text = result?.trim();
-    if (text) {
-      return { purpose: text, role: 'mixed', confidence: 0.8, evidence_paths: snippets.map(s=>s.path).slice(0,5) };
-    }
-  } catch {}
+  } catch (e) {
+    logTelemetry({ type: 'ai_error', app: appPath, provider: 'gemini', error: String(e) });
+  }
   return null;
 }
 
