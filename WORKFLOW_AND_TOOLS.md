@@ -462,19 +462,190 @@ flowchart LR
 
 ---
 
-## Git vs Non‑Git Apps and AI Summarization
+## 🔍 When AI Services Are Used vs Not Used: The Complete Guide
 
-### Behavior Summary
+### 🧠 AI Usage Decision Tree
 
-| Context | Metadata (.capsule.json) | Budgets Used | AI Summarization | Notes |
-|---|---|---|---|---|
-| Non‑Git app path | Created (once) | `purpose.limits` | Yes (local stub by default) | Guides indexing for non‑repo code |
-| Git repo path | Not created | `purpose.gitRepoOverrides` | Yes (local stub by default) | Larger budgets for repos |
+```mermaid
+flowchart TB
+    Start["🚀 App Processing Triggered"]
+    --> CheckDisabled{"❌ AI Disabled?<br/>(WORKSPACE_MCP_AI=disabled)"}
+    
+    CheckDisabled -->|Yes| LocalOnly["🏠 Local Heuristic Only<br/>📝 Extract from README/package.json<br/>🚪 Find entrypoints<br/>🧪 Locate tests<br/>⚡ Fast, no network calls"]
+    
+    CheckDisabled -->|No| CheckGit{"📁 Git Repo?<br/>(has .git folder)"}
+    
+    CheckGit -->|Non-Git| NonGit["📝 Non-Git Path<br/>💾 Create .capsule.json<br/>📊 Use purpose.limits<br/>🧠 Try AI summarization"]
+    
+    CheckGit -->|Git Repo| GitRepo["📂 Git Repository<br/>❌ No .capsule.json<br/>📊 Use gitRepoOverrides<br/>🧠 Try AI summarization"]
+    
+    NonGit --> TryAI["🤖 Attempt AI Summarization"]
+    GitRepo --> TryAI
+    
+    TryAI --> CheckAPI{"🔑 API Available?<br/>(GOOGLE_API_KEY or OPENAI_API_KEY)"}
+    
+    CheckAPI -->|Yes| AISuccess["✅ AI Summarization<br/>🧠 Gemini/OpenAI analysis<br/>🎯 Intelligent purpose extraction<br/>📊 Confidence scoring"]
+    
+    CheckAPI -->|No| AIFallback["🏠 Fallback to Local<br/>📝 Heuristic extraction<br/>🎯 Basic purpose from README<br/>📊 Lower confidence"]
+    
+    AISuccess --> CacheResult["💾 Cache Capsule<br/>💾 Write to cache/capsule_*.json<br/>🧠 Load to memory<br/>📇 Build search index"]
+    
+    AIFallback --> CacheResult
+    LocalOnly --> CacheResult
+    
+    CacheResult --> Ready["✅ Ready for Queries"]
 
-Key points:
-- The system checks if an app is inside a Git repo to decide two things: whether to create lightweight metadata, and which resource budgets to apply.
-- Both Git and non‑Git apps are summarized into capsules and cached.
-- By default, external AI summarization is ENABLED. It can be disabled with env flags at any time.
+    classDef start fill:#e3f2fd,stroke:#2196f3,stroke-width:3px,color:#000
+    classDef decision fill:#fff3e0,stroke:#ff9800,stroke-width:2px,color:#000
+    classDef local fill:#f5f5f5,stroke:#9e9e9e,stroke-width:2px,color:#000
+    classDef ai fill:#e8f5e8,stroke:#4caf50,stroke-width:2px,color:#000
+    classDef cache fill:#f1f8e9,stroke:#795548,stroke-width:2px,color:#000
+    classDef ready fill:#e8f5e8,stroke:#4caf50,stroke-width:3px,color:#000
+
+    class Start start
+    class CheckDisabled,CheckGit,CheckAPI decision
+    class LocalOnly,AIFallback local
+    class NonGit,GitRepo,TryAI,AISuccess ai
+    class CacheResult cache
+    class Ready ready
+```
+
+### 📊 Git vs Non-Git: Detailed Behavior Matrix
+
+| Aspect | **Non-Git Projects** | **Git Repositories** |
+|--------|---------------------|----------------------|
+| **📝 Metadata File** | ✅ Creates `.capsule.json` | ❌ No metadata file |
+| **🎯 Purpose** | Guide indexing for loose files | Assume repo has own structure |
+| **📊 Resource Budgets** | `purpose.limits` (conservative) | `purpose.gitRepoOverrides` (generous) |
+| **📁 Max Files** | 25 files | 50 files |
+| **💾 Max Bytes** | 350KB | 800KB |
+| **⏱️ Timeout** | 8 seconds | 12 seconds |
+| **🧠 AI Summarization** | ✅ Yes (if enabled) | ✅ Yes (if enabled) |
+| **🔄 Refresh Trigger** | File changes + activity | File changes + activity |
+
+### 🔄 Capsule Refresh Mechanisms: When and How Often
+
+```mermaid
+flowchart TB
+    subgraph Triggers ["⚡ Refresh Triggers"]
+        FileChange["📝 File Changes<br/>🔍 Chokidar detects edits<br/>⏱️ 750ms debounce<br/>📋 Enqueues app"]
+        
+        Activity["📊 Activity Promotion<br/>👁️ Cursor IDE usage<br/>📂 Recent file access<br/>⏱️ Every 5 minutes<br/>📋 Promotes hot apps"]
+        
+        Startup["🚀 Server Startup<br/>💾 Load existing capsules<br/>📋 Enqueue all apps<br/>🔄 Incremental updates"]
+        
+        Manual["🔧 Manual Bootstrap<br/>🛠️ workspace.bootstrap tool<br/>🔄 Force refresh<br/>⚡ Immediate update"]
+    end
+    
+    subgraph RateLimit ["🚦 Rate Limiting"]
+        Queue["📋 Priority Queue<br/>🥇 Priority paths first<br/>📊 3 jobs/minute max<br/>⚡ 3 concurrent max"]
+        
+        Debounce["⏱️ Debouncing<br/>📁 Per-app 750ms window<br/>🔄 Coalesces rapid changes<br/>💾 Prevents spam"]
+    end
+    
+    subgraph Processing ["🏭 Processing Pipeline"]
+        Check["🔍 Check Cache<br/>💾 Load existing capsule<br/>📅 Check timestamps<br/>🔄 Decide if refresh needed"]
+        
+        Process["🧠 Process App<br/>🤖 Try AI (if enabled)<br/>🏠 Fallback to local<br/>💾 Update cache"]
+    end
+    
+    FileChange --> Debounce
+    Activity --> Queue
+    Startup --> Queue
+    Manual --> Queue
+    
+    Debounce --> Queue
+    Queue --> Check
+    Check --> Process
+    
+    classDef trigger fill:#fff3e0,stroke:#ff9800,stroke-width:2px,color:#000
+    classDef rate fill:#e3f2fd,stroke:#2196f3,stroke-width:2px,color:#000
+    classDef process fill:#f3e5f5,stroke:#9c27b0,stroke-width:2px,color:#000
+
+    class FileChange,Activity,Startup,Manual trigger
+    class Queue,Debounce rate
+    class Check,Process process
+```
+
+### 🎯 Exact AI Service Usage Scenarios
+
+#### ✅ **AI Services ARE Used When:**
+
+1. **🧠 Capsule Creation/Refresh** (Both Git and Non-Git):
+   ```javascript
+   // Code reference: processOne() function
+   const ai = await aiSummarizeApp(job.appPath, limits);
+   capsule = Object.assign({}, summarizeApp(job.appPath), {
+     purpose: ai.purpose || 'Unknown',
+     ai: { role: ai.role, confidence: ai.confidence, evidence_paths: ai.evidence_paths }
+   });
+   ```
+   - **When**: App first discovered, file changes detected, manual refresh
+   - **What AI does**: Analyzes representative files to extract purpose and classify role
+   - **Fallback**: If AI fails, uses local heuristic (`summarizeApp()`)
+
+2. **🔄 Activity-Based Promotions**:
+   - **Frequency**: Every 5 minutes (if `activity.enable: true`)
+   - **Trigger**: Apps with activity score ≥ `minScore` (default 3.0)
+   - **Sources**: Cursor IDE state, session history, recent file modifications
+
+#### ❌ **AI Services are NOT Used When:**
+
+1. **🚫 Explicitly Disabled**:
+   ```bash
+   export WORKSPACE_MCP_AI=disabled
+   # or
+   export WORKSPACE_MCP_AI_DISABLE=1
+   ```
+
+2. **🔍 Query-Time Operations**:
+   - **Search queries** (`workspace.search_semantic`) use pre-built capsules
+   - **Tool calls** (`list_entrypoints`, `describe_symbol`) use cached data
+   - **No real-time AI** during user interactions
+
+3. **💾 Cache Hits**:
+   - If capsule already exists and is recent, AI is skipped
+   - Uses cached `purpose`, `role`, `confidence` from previous AI analysis
+
+### ⏰ Refresh Frequency by Scenario
+
+| Scenario | Frequency | AI Usage | Cache Behavior |
+|----------|-----------|----------|----------------|
+| **🆕 New App** | Immediate | ✅ AI analysis | 💾 Create new capsule |
+| **📝 File Changes** | 750ms debounced | ✅ AI re-analysis | 🔄 Update existing capsule |
+| **📊 Activity Promotion** | Every 5 minutes | ✅ AI analysis | 🔄 Refresh if stale |
+| **🔍 Search Queries** | Every query | ❌ No AI | 📖 Read cached capsule |
+| **🛠️ Tool Calls** | Per call | ❌ No AI | 📖 Read cached capsule |
+
+### 🔑 What "AI Service Available" Means
+
+When AI services are available and used:
+
+```mermaid
+flowchart LR
+    subgraph Available ["✅ AI Service Available"]
+        API["🔑 API Key Present<br/>(GOOGLE_API_KEY or OPENAI_API_KEY)"]
+        --> Call["📞 API Call<br/>📄 Send representative snippets<br/>🧠 Get intelligent analysis"]
+        --> Parse["📝 Parse Response<br/>🎯 Extract purpose<br/>📊 Assign confidence<br/>🏷️ Classify role"]
+        --> Enhanced["🌟 Enhanced Capsule<br/>🎯 AI-generated purpose<br/>📊 Confidence: 0.8-0.9<br/>📄 Evidence paths"]
+    end
+    
+    subgraph Unavailable ["❌ AI Service Unavailable"]
+        NoAPI["🚫 No API Key"]
+        --> Heuristic["🏠 Local Heuristic<br/>📝 Parse README.md<br/>📦 Check package.json<br/>📚 Scan docs/ folder"]
+        --> Basic["📦 Basic Capsule<br/>🎯 Heuristic purpose<br/>📊 Confidence: 0.6<br/>📄 File-based evidence"]
+    end
+    
+    classDef available fill:#e8f5e8,stroke:#4caf50,stroke-width:2px,color:#000
+    classDef unavailable fill:#fff3e0,stroke:#ff9800,stroke-width:2px,color:#000
+    classDef enhanced fill:#e8f5e8,stroke:#4caf50,stroke-width:3px,color:#000
+    classDef basic fill:#f5f5f5,stroke:#9e9e9e,stroke-width:2px,color:#000
+
+    class API,Call,Parse available
+    class NoAPI,Heuristic unavailable
+    class Enhanced enhanced
+    class Basic basic
+```
 
 Code references:
 
