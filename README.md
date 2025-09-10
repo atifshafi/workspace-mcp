@@ -74,16 +74,20 @@ Traditional code search is limited to exact text matching. When you ask "Where i
 ### 🧠 How It Works
 
 ```mermaid
-%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#ffffff", "primaryTextColor": "#000000", "primaryBorderColor": "#000000", "lineColor": "#000000", "background": "#ffffff"}} }%%
-graph LR
-    A[📁 Your Workspace] --> B[🔍 AI Analysis]
-    B --> C[📦 Smart Capsules]
-    C --> D[⚡ Instant Search]
+flowchart LR
+    A["📁 Your Workspace"] --> B["🧠 AI Analysis"]
+    B --> C["📦 Smart Capsules"]
+    C --> D["⚡ Instant Search"]
     
-    style A fill:#e3f2fd,color:#000,stroke:#000
-    style B fill:#fff3e0,color:#000,stroke:#000
-    style C fill:#f3e5f5,color:#000,stroke:#000
-    style D fill:#e8f5e8,color:#000,stroke:#000
+    classDef workspace fill:#e3f2fd,stroke:#333,stroke-width:2px,color:#000
+    classDef ai fill:#fff3e0,stroke:#333,stroke-width:2px,color:#000
+    classDef capsule fill:#f3e5f5,stroke:#333,stroke-width:2px,color:#000
+    classDef search fill:#e8f5e8,stroke:#333,stroke-width:2px,color:#000
+
+    class A workspace
+    class B ai
+    class C capsule
+    class D search
 ```
 
 1. **🔍 Discovers** your projects automatically using smart glob patterns
@@ -133,41 +137,40 @@ graph LR
 ### System Overview
 
 ```mermaid
-%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#ffffff", "primaryTextColor": "#000000", "primaryBorderColor": "#000000", "lineColor": "#000000", "secondaryColor": "#f0f0f0", "tertiaryColor": "#ffffff", "background": "#ffffff", "mainBkg": "#ffffff", "secondaryTextColor": "#000000", "tertiaryTextColor": "#000000", "fontSize": "14px"}} }%%
 graph TB
-    subgraph "Workspace MCP Server"
+    subgraph Server ["🧠 Workspace MCP Server"]
         direction TB
         
-        subgraph "Core Components"
-            WS[Workspace Scanner]
-            CG[Capsule Generator]
-            QM[Queue Manager]
-            FS[File Watcher]
+        subgraph Core ["⚡ Core Components"]
+            WS["🔍 Workspace Scanner"]
+            CG["🏭 Capsule Generator"]
+            QM["📋 Queue Manager"]
+            FS["👁️ File Watcher"]
         end
         
-        subgraph "Storage Layer"
-            CM[Capsule Memory]
-            CC[Capsule Cache]
-            SI[Search Index]
+        subgraph Storage ["💾 Storage Layer"]
+            CM["🧠 Capsule Memory"]
+            CC["💾 Capsule Cache"]
+            SI["📇 Search Index"]
         end
         
-        subgraph "Search Engine"
-            BM[BM25 Index]
-            SE[Semantic Embeddings]
-            HS[Hybrid Search]
+        subgraph Engine ["🔎 Search Engine"]
+            BM["📊 BM25 Index"]
+            SE["🧠 Semantic Embeddings"]
+            HS["⚡ Hybrid Search"]
         end
         
-        subgraph "MCP Interface"
-            TR[Tool Registry]
-            RH[Request Handler]
-            ST[StdIO Transport]
+        subgraph Interface ["🛠️ MCP Interface"]
+            TR["🔧 Tool Registry"]
+            RH["📡 Request Handler"]
+            ST["🔌 StdIO Transport"]
         end
     end
     
-    subgraph "External Systems"
-        CLIENT[MCP Client/Cursor]
-        WORKSPACE[File System]
-        CONFIG[config.json]
+    subgraph External ["🌐 External Systems"]
+        CLIENT["💻 MCP Client/Cursor"]
+        WORKSPACE["📁 File System"]
+        CONFIG["⚙️ config.json"]
     end
     
     WS --> WORKSPACE
@@ -186,33 +189,42 @@ graph TB
     ST <--> CLIENT
     CONFIG --> WS
     
-    style WS fill:#e1f5fe,color:#000000,stroke:#000000
-    style CG fill:#f3e5f5,color:#000000,stroke:#000000
-    style QM fill:#fff3e0,color:#000000,stroke:#000000
-    style HS fill:#e8f5e8,color:#000000,stroke:#000000
+    classDef core fill:#e1f5fe,stroke:#333,stroke-width:2px,color:#000
+    classDef storage fill:#f1f8e9,stroke:#333,stroke-width:2px,color:#000
+    classDef search fill:#e8f5e8,stroke:#333,stroke-width:2px,color:#000
+    classDef interface fill:#ede7f6,stroke:#333,stroke-width:2px,color:#000
+    classDef external fill:#fff3e0,stroke:#333,stroke-width:2px,color:#000
+
+    class WS,CG,QM,FS core
+    class CM,CC,SI storage
+    class BM,SE,HS search
+    class TR,RH,ST interface
+    class CLIENT,WORKSPACE,CONFIG external
 ```
 
 ### Data Flow
 
 ```mermaid
-%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#ffffff", "primaryTextColor": "#000000", "primaryBorderColor": "#000000", "lineColor": "#000000", "secondaryColor": "#f0f0f0", "tertiaryColor": "#ffffff", "background": "#ffffff", "mainBkg": "#ffffff", "secondaryTextColor": "#000000", "tertiaryTextColor": "#000000", "fontSize": "14px"}} }%%
 sequenceDiagram
-    participant Client as MCP Client
-    participant Server as Workspace MCP
-    participant Scanner as App Scanner
-    participant Queue as Job Queue
-    participant Generator as Capsule Generator
-    participant Cache as File Cache
-    participant Search as Search Engine
+    participant Client as 💻 MCP Client
+    participant Server as 🧠 Workspace MCP
+    participant Scanner as 🔍 App Scanner
+    participant Queue as 📋 Job Queue
+    participant Generator as 🏭 Capsule Generator
+    participant Cache as 💾 File Cache
+    participant Search as 🔎 Search Engine
 
     Client->>Server: Initialize MCP Connection
     Server->>Scanner: Discover Apps
     Scanner->>Queue: Enqueue Apps for Processing
     
-    loop Queue Processing
-        Queue->>Generator: Process App
-        Generator->>Cache: Read/Write Capsule
-        Generator->>Search: Build Search Index
+    rect rgb(240, 248, 255)
+        Note over Queue,Search: Queue Processing
+        loop Process Apps
+            Queue->>Generator: Process App
+            Generator->>Cache: Read/Write Capsule
+            Generator->>Search: Build Search Index
+        end
     end
     
     Client->>Server: search_semantic(query)
@@ -220,30 +232,29 @@ sequenceDiagram
     Search-->>Server: Ranked Results
     Server-->>Client: Search Results
     
-    Note over Server, Cache: File watching triggers re-indexing
+    Note over Server, Cache: 👁️ File watching triggers re-indexing
 ```
 
 ### Capsule Structure
 
 ```mermaid
-%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#ffffff", "primaryTextColor": "#000000", "primaryBorderColor": "#000000", "lineColor": "#000000", "secondaryColor": "#f0f0f0", "tertiaryColor": "#ffffff", "background": "#ffffff", "mainBkg": "#ffffff", "secondaryTextColor": "#000000", "tertiaryTextColor": "#000000", "fontSize": "14px"}} }%%
-graph LR
-    subgraph "App Capsule"
+flowchart TB
+    subgraph Capsule ["📦 App Capsule"]
         direction TB
         
-        META[Metadata<br/>• Purpose<br/>• Generated At<br/>• Token Budget]
+        META["📋 Metadata<br/>• Purpose<br/>• Generated At<br/>• Token Budget"]
         
-        ARCH[Architecture<br/>• Key Modules<br/>• Flow Diagram<br/>• Dependencies]
+        ARCH["🏗️ Architecture<br/>• Key Modules<br/>• Flow Diagram<br/>• Dependencies"]
         
-        ENTRY[Entrypoints<br/>• Main Files<br/>• CLI Scripts<br/>• Server Files]
+        ENTRY["🚪 Entrypoints<br/>• Main Files<br/>• CLI Scripts<br/>• Server Files"]
         
-        DOCS[Documentation<br/>• README<br/>• Architecture<br/>• Runbooks]
+        DOCS["📚 Documentation<br/>• README<br/>• Architecture<br/>• Runbooks"]
         
-        TESTS[Test Suite<br/>• Unit Tests<br/>• Integration<br/>• Hot Tests]
+        TESTS["🧪 Test Suite<br/>• Unit Tests<br/>• Integration<br/>• Hot Tests"]
         
-        OWNERS[Ownership<br/>• Team Info<br/>• Maintainers<br/>• Contacts]
+        OWNERS["👥 Ownership<br/>• Team Info<br/>• Maintainers<br/>• Contacts"]
         
-        AI[AI Analysis<br/>• Role Classification<br/>• Confidence Score<br/>• Evidence Paths]
+        AI["🤖 AI Analysis<br/>• Role Classification<br/>• Confidence Score<br/>• Evidence Paths"]
     end
     
     META --> ARCH
@@ -253,13 +264,21 @@ graph LR
     TESTS --> OWNERS
     OWNERS --> AI
     
-    style META fill:#e3f2fd,color:#111111
-    style ARCH fill:#f1f8e9,color:#111111
-    style ENTRY fill:#fff3e0,color:#111111
-    style DOCS fill:#fce4ec,color:#111111
-    style TESTS fill:#e8f5e8,color:#111111
-    style OWNERS fill:#f3e5f5,color:#111111
-    style AI fill:#fff8e1,color:#111111
+    classDef metadata fill:#e3f2fd,stroke:#333,stroke-width:2px,color:#000
+    classDef arch fill:#f1f8e9,stroke:#333,stroke-width:2px,color:#000
+    classDef entry fill:#fff3e0,stroke:#333,stroke-width:2px,color:#000
+    classDef docs fill:#fce4ec,stroke:#333,stroke-width:2px,color:#000
+    classDef tests fill:#e8f5e8,stroke:#333,stroke-width:2px,color:#000
+    classDef owners fill:#f3e5f5,stroke:#333,stroke-width:2px,color:#000
+    classDef ai fill:#fff8e1,stroke:#333,stroke-width:2px,color:#000
+
+    class META metadata
+    class ARCH arch
+    class ENTRY entry
+    class DOCS docs
+    class TESTS tests
+    class OWNERS owners
+    class AI ai
 ```
 
 ## ⚙️ Configuration
@@ -402,20 +421,19 @@ The server exposes the following MCP tools:
 ### Processing Pipeline
 
 ```mermaid
-%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#ffffff", "primaryTextColor": "#000000", "primaryBorderColor": "#000000", "lineColor": "#000000", "secondaryColor": "#f0f0f0", "tertiaryColor": "#ffffff", "background": "#ffffff", "mainBkg": "#ffffff", "secondaryTextColor": "#000000", "tertiaryTextColor": "#000000", "fontSize": "14px"}} }%%
-graph LR
-    subgraph "Job Queue System"
+flowchart LR
+    subgraph QueueSystem ["📋 Job Queue System"]
         direction LR
         
-        TRIGGER[File Changes<br/>Activity<br/>Startup]
+        TRIGGER["⚡ File Changes<br/>📊 Activity<br/>🚀 Startup"]
         
-        DEBOUNCE[Debounce<br/>750ms window]
+        DEBOUNCE["⏱️ Debounce<br/>750ms window"]
         
-        QUEUE[Priority Queue<br/>• Priority 1: Priority paths<br/>• Priority 2: Standard<br/>• FIFO within priority]
+        QUEUE["📋 Priority Queue<br/>• Priority 1: Priority paths<br/>• Priority 2: Standard<br/>• FIFO within priority"]
         
-        RATE[Rate Limiter<br/>• 3 jobs/minute<br/>• 3 concurrent max]
+        RATE["🚦 Rate Limiter<br/>• 3 jobs/minute<br/>• 3 concurrent max"]
         
-        PROCESS[Processing<br/>• Git detection<br/>• Metadata creation<br/>• AI summarization<br/>• Capsule caching]
+        PROCESS["🏭 Processing<br/>• Git detection<br/>• Metadata creation<br/>• AI summarization<br/>• Capsule caching"]
         
         TRIGGER --> DEBOUNCE
         DEBOUNCE --> QUEUE
@@ -423,11 +441,17 @@ graph LR
         RATE --> PROCESS
     end
     
-    style TRIGGER fill:#ffecb3,color:#111111
-    style DEBOUNCE fill:#e1f5fe,color:#111111
-    style QUEUE fill:#f3e5f5,color:#111111
-    style RATE fill:#fff3e0,color:#111111
-    style PROCESS fill:#e8f5e8,color:#111111
+    classDef trigger fill:#ffecb3,stroke:#333,stroke-width:2px,color:#000
+    classDef debounce fill:#e1f5fe,stroke:#333,stroke-width:2px,color:#000
+    classDef queue fill:#f3e5f5,stroke:#333,stroke-width:2px,color:#000
+    classDef rate fill:#fff3e0,stroke:#333,stroke-width:2px,color:#000
+    classDef process fill:#e8f5e8,stroke:#333,stroke-width:2px,color:#000
+
+    class TRIGGER trigger
+    class DEBOUNCE debounce
+    class QUEUE queue
+    class RATE rate
+    class PROCESS process
 ```
 
 ### Activity-based Promotion

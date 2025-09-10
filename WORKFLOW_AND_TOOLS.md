@@ -5,39 +5,43 @@ This document explains, in depth, how the server discovers apps, builds metadata
 ### High-Level Flow
 
 ```mermaid
-%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#ffffff", "primaryTextColor": "#000000", "primaryBorderColor": "#000000", "lineColor": "#000000", "background": "#ffffff"}} }%%
 graph TB
-  A[File System]
-  B[Workspace Scanner]
-  C[config.json]
-  D[Job Queue]
-  E[Capsule Generator]
-  F[Capsule Cache]
-  G[Capsule Memory]
-  H[Search Index]
-  I[Hybrid Search]
-  J[MCP Tools]
-  K[MCP Client]
+    FileSystem["📁 File System"]
+    Scanner["🔍 Workspace Scanner"]
+    Config["⚙️ config.json"]
+    Queue["📋 Job Queue"]
+    Generator["🏭 Capsule Generator"]
+    Cache["💾 Capsule Cache"]
+    Memory["🧠 Capsule Memory"]
+    Index["📇 Search Index"]
+    Search["🔎 Hybrid Search"]
+    Tools["🛠️ MCP Tools"]
+    Client["💻 MCP Client"]
 
-  A --> B
-  C --> B
-  B --> D
-  D --> E
-  E --> F
-  E --> G
-  G --> H
-  H --> I
-  I --> J
-  J --> K
+    FileSystem --> Scanner
+    Config --> Scanner
+    Scanner --> Queue
+    Queue --> Generator
+    Generator --> Cache
+    Generator --> Memory
+    Memory --> Index
+    Index --> Search
+    Search --> Tools
+    Tools --> Client
 
-  style B fill:#e1f5fe,color:#000,stroke:#000
-  style D fill:#fff3e0,color:#000,stroke:#000
-  style E fill:#f3e5f5,color:#000,stroke:#000
-  style F fill:#f1f8e9,color:#000,stroke:#000
-  style G fill:#f1f8e9,color:#000,stroke:#000
-  style H fill:#e3f2fd,color:#000,stroke:#000
-  style I fill:#fce4ec,color:#000,stroke:#000
-  style J fill:#ede7f6,color:#000,stroke:#000
+    classDef scanner fill:#e1f5fe,stroke:#333,stroke-width:2px,color:#000
+    classDef queue fill:#fff3e0,stroke:#333,stroke-width:2px,color:#000
+    classDef generator fill:#f3e5f5,stroke:#333,stroke-width:2px,color:#000
+    classDef storage fill:#f1f8e9,stroke:#333,stroke-width:2px,color:#000
+    classDef search fill:#e3f2fd,stroke:#333,stroke-width:2px,color:#000
+    classDef tools fill:#ede7f6,stroke:#333,stroke-width:2px,color:#000
+
+    class Scanner scanner
+    class Queue queue
+    class Generator generator
+    class Cache,Memory storage
+    class Index,Search search
+    class Tools tools
 ```
 
 ### Why it’s fast: Metadata → Capsules → Cache → Search
@@ -51,68 +55,72 @@ graph TB
 ### Detailed Sequence
 
 ```mermaid
-%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#ffffff", "primaryTextColor": "#000000", "primaryBorderColor": "#000000", "lineColor": "#000000", "background": "#ffffff"}} }%%
 sequenceDiagram
-  participant Client as MCP Client
-  participant Server as Workspace MCP
-  participant Scanner as Workspace Scanner
-  participant Queue as Job Queue
-  participant Generator as Capsule Generator
-  participant Cache as Capsule Cache
-  participant Memory as Capsule Memory
-  participant Index as Search Index
+    participant C as 💻 MCP Client
+    participant S as 🧠 Workspace MCP
+    participant Sc as 🔍 App Scanner
+    participant Q as 📋 Job Queue
+    participant G as 🏭 Capsule Generator
+    participant Ca as 💾 Capsule Cache
+    participant M as 🧠 Capsule Memory
+    participant I as 📇 Search Index
 
-  Client->>Server: initialize()
-  Server->>Scanner: listAppRoots()
-  Scanner-->>Server: app paths
-  Server->>Queue: enqueue(apps)
-  loop Queue Processing
-    Queue->>Generator: processOne(app)
-    alt Non-git path
-      Generator->>Generator: ensure metadata (.capsule.json)
+    C->>S: initialize()
+    S->>Sc: listAppRoots()
+    Sc-->>S: app paths
+    S->>Q: enqueue(apps)
+    
+    rect rgb(240, 248, 255)
+        Note over Q,Ca: Queue Processing Loop
+        Q->>G: processOne(app)
+        alt Non-git path
+            G->>G: ensure metadata (.capsule.json)
+        end
+        G->>Ca: write capsule_*.json
+        G->>M: update in-memory capsule
+        M->>I: build Lunr index (first time)
     end
-    Generator->>Cache: write capsule_*.json
-    Generator->>Memory: update in-memory capsule
-    Memory->>Index: build Lunr index (first time)
-  end
 
-  Client->>Server: tools/call workspace.search_semantic
-  Server->>Index: search BM25
-  alt mode != bm25
-    Server->>Index: semantic rerank (optional)
-  end
-  Server-->>Client: ranked items + previews
+    C->>S: tools/call workspace.search_semantic
+    S->>I: search BM25
+    alt mode != bm25
+        S->>I: semantic rerank (optional)
+    end
+    S-->>C: ranked items + previews
 ```
 
 ### Boot Sequence (From Zero → Ready)
 
 ```mermaid
-%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#ffffff", "primaryTextColor": "#000000", "primaryBorderColor": "#000000", "lineColor": "#000000", "background": "#ffffff"}} }%%
-graph LR
-  Start([Start]) --> ReadCfg[Read config.json]
-  ReadCfg --> Discover[listAppRoots()]
-  Discover --> Enqueue[Seed jobs for apps]
-  Enqueue --> Pump[pumpQueue()]
-  Pump --> Proc[processOne(app)]
-  Proc -->|non-git| Meta[ensure .capsule.json]
-  Proc --> Summ[Summarize app]
-  Summ --> Cache[Write capsule cache]
-  Summ --> Mem[Update in-memory capsule]
-  Mem --> Lunr[Build Lunr index]
-  Lunr --> Watch[Start file watchers]
-  Watch --> Ready([Ready])
+flowchart LR
+    Start(["🚀 Start"]) --> ReadCfg["📖 Read config.json"]
+    ReadCfg --> Discover["🔍 listAppRoots()"]
+    Discover --> Enqueue["📋 Seed jobs for apps"]
+    Enqueue --> Pump["⚡ pumpQueue()"]
+    Pump --> Proc["🏭 processOne(app)"]
+    Proc -->|non-git| Meta["📝 ensure .capsule.json"]
+    Proc --> Summ["🧠 Summarize app"]
+    Summ --> Cache["💾 Write capsule cache"]
+    Summ --> Mem["🧠 Update in-memory capsule"]
+    Mem --> Lunr["📇 Build Lunr index"]
+    Lunr --> Watch["👁️ Start file watchers"]
+    Watch --> Ready(["✅ Ready"])
 
-  style ReadCfg fill:#e1f5fe,color:#000,stroke:#000
-  style Discover fill:#e1f5fe,color:#000,stroke:#000
-  style Enqueue fill:#fff3e0,color:#000,stroke:#000
-  style Pump fill:#fff3e0,color:#000,stroke:#000
-  style Proc fill:#ede7f6,color:#000,stroke:#000
-  style Meta fill:#f1f8e9,color:#000,stroke:#000
-  style Summ fill:#f3e5f5,color:#000,stroke:#000
-  style Cache fill:#f1f8e9,color:#000,stroke:#000
-  style Mem fill:#e1f5fe,color:#000,stroke:#000
-  style Lunr fill:#e3f2fd,color:#000,stroke:#000
-  style Watch fill:#fce4ec,color:#000,stroke:#000
+    classDef startEnd fill:#e8f5e8,stroke:#333,stroke-width:3px,color:#000
+    classDef config fill:#e1f5fe,stroke:#333,stroke-width:2px,color:#000
+    classDef queue fill:#fff3e0,stroke:#333,stroke-width:2px,color:#000
+    classDef process fill:#ede7f6,stroke:#333,stroke-width:2px,color:#000
+    classDef storage fill:#f1f8e9,stroke:#333,stroke-width:2px,color:#000
+    classDef search fill:#e3f2fd,stroke:#333,stroke-width:2px,color:#000
+    classDef watch fill:#fce4ec,stroke:#333,stroke-width:2px,color:#000
+
+    class Start,Ready startEnd
+    class ReadCfg,Discover config
+    class Enqueue,Pump queue
+    class Proc,Summ process
+    class Meta,Cache,Mem storage
+    class Lunr search
+    class Watch watch
 ```
 
 Summary of relationships:
@@ -176,25 +184,31 @@ Search modes:
 - Telemetry is appended to `cache/telemetry.log` for troubleshooting.
 
 ```mermaid
-%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#ffffff", "primaryTextColor": "#000000", "primaryBorderColor": "#000000", "lineColor": "#000000", "background": "#ffffff"}} }%%
-graph LR
-  subgraph App
-    SRC[Source Files]
-    META[(.capsule.json)]
-  end
-  SRC --> GEN[Summarize]
-  META --> GEN
-  GEN --> MEM[(Capsule Memory)]
-  GEN --> DISK[(Capsule Cache)]
-  MEM --> LUNR[(Lunr Index)]
-  LUNR --> QRY[Query]
-  QRY --> RES[Ranked Results]
+flowchart LR
+    subgraph App ["📁 Application"]
+        SRC["📄 Source Files"]
+        META["📝 .capsule.json"]
+    end
+    
+    SRC --> GEN["🧠 AI Summarize"]
+    META --> GEN
+    GEN --> MEM[("🧠 Capsule Memory")]
+    GEN --> DISK[("💾 Capsule Cache")]
+    MEM --> LUNR[("📇 Lunr Index")]
+    LUNR --> QRY["🔍 Query"]
+    QRY --> RES["📊 Ranked Results"]
 
-  style GEN fill:#f3e5f5,color:#000,stroke:#000
-  style MEM fill:#e1f5fe,color:#000,stroke:#000
-  style DISK fill:#f1f8e9,color:#000,stroke:#000
-  style LUNR fill:#fff3e0,color:#000,stroke:#000
-  style QRY fill:#fce4ec,color:#000,stroke:#000
+    classDef generator fill:#f3e5f5,stroke:#333,stroke-width:2px,color:#000
+    classDef memory fill:#e1f5fe,stroke:#333,stroke-width:2px,color:#000
+    classDef storage fill:#f1f8e9,stroke:#333,stroke-width:2px,color:#000
+    classDef search fill:#fff3e0,stroke:#333,stroke-width:2px,color:#000
+    classDef query fill:#fce4ec,stroke:#333,stroke-width:2px,color:#000
+
+    class GEN generator
+    class MEM memory
+    class DISK storage
+    class LUNR search
+    class QRY,RES query
 ```
 
 ---
