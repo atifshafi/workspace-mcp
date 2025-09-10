@@ -44,7 +44,7 @@ The Workspace MCP Server is an intelligent workspace analysis tool that automati
 ### System Overview
 
 ```mermaid
-%%{init: {"theme": "default", "themeVariables": {"primaryTextColor": "#111111", "secondaryTextColor": "#111111", "tertiaryTextColor": "#111111", "lineColor": "#1f2937", "fontSize": "14px"}} }%%
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#ffffff", "primaryTextColor": "#000000", "primaryBorderColor": "#000000", "lineColor": "#000000", "secondaryColor": "#f0f0f0", "tertiaryColor": "#ffffff", "background": "#ffffff", "mainBkg": "#ffffff", "secondaryTextColor": "#000000", "tertiaryTextColor": "#000000", "fontSize": "14px"}} }%%
 graph TB
     subgraph "Workspace MCP Server"
         direction TB
@@ -97,16 +97,16 @@ graph TB
     ST <--> CLIENT
     CONFIG --> WS
     
-    style WS fill:#e1f5fe,color:#111111
-    style CG fill:#f3e5f5,color:#111111
-    style QM fill:#fff3e0,color:#111111
-    style HS fill:#e8f5e8,color:#111111
+    style WS fill:#e1f5fe,color:#000000,stroke:#000000
+    style CG fill:#f3e5f5,color:#000000,stroke:#000000
+    style QM fill:#fff3e0,color:#000000,stroke:#000000
+    style HS fill:#e8f5e8,color:#000000,stroke:#000000
 ```
 
 ### Data Flow
 
 ```mermaid
-%%{init: {"theme": "default", "themeVariables": {"primaryTextColor": "#111111", "secondaryTextColor": "#111111", "tertiaryTextColor": "#111111", "lineColor": "#1f2937", "fontSize": "14px"}} }%%
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#ffffff", "primaryTextColor": "#000000", "primaryBorderColor": "#000000", "lineColor": "#000000", "secondaryColor": "#f0f0f0", "tertiaryColor": "#ffffff", "background": "#ffffff", "mainBkg": "#ffffff", "secondaryTextColor": "#000000", "tertiaryTextColor": "#000000", "fontSize": "14px"}} }%%
 sequenceDiagram
     participant Client as MCP Client
     participant Server as Workspace MCP
@@ -137,7 +137,7 @@ sequenceDiagram
 ### Capsule Structure
 
 ```mermaid
-%%{init: {"theme": "default", "themeVariables": {"primaryTextColor": "#111111", "secondaryTextColor": "#111111", "tertiaryTextColor": "#111111", "lineColor": "#1f2937", "fontSize": "14px"}} }%%
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#ffffff", "primaryTextColor": "#000000", "primaryBorderColor": "#000000", "lineColor": "#000000", "secondaryColor": "#f0f0f0", "tertiaryColor": "#ffffff", "background": "#ffffff", "mainBkg": "#ffffff", "secondaryTextColor": "#000000", "tertiaryTextColor": "#000000", "fontSize": "14px"}} }%%
 graph LR
     subgraph "App Capsule"
         direction TB
@@ -179,13 +179,13 @@ graph LR
 
 ```json
 {
-  "workspaceRoot": "/Users/ashafi/Documents/work",
+  "workspaceRoot": "/path/to/your/workspace",
   "appGlobs": [
-    "ai/ai_systems/apps/*",
-    "automation/dev-team-repos/*",
-    "automation/qe-automation-repos/*",
+    "apps/*",
+    "packages/*",
+    "services/*",
     "tools/*",
-    "automation/documentation/*",
+    "documentation/*",
     "notes/*"
   ],
   "ignore": [
@@ -200,7 +200,7 @@ graph LR
     "maxConcurrentSummaries": 3,
     "summariesPerMinute": 3,
     "debounceMs": 750,
-    "priorityPaths": ["/Users/ashafi/Documents/work/ai/ai_systems/apps"]
+    "priorityPaths": ["/path/to/your/workspace/priority/apps"]
   },
   "purpose": {
     "limits": {
@@ -236,8 +236,8 @@ graph LR
 
 | Section | Option | Description | Default |
 |---------|--------|-------------|---------|
-| `workspaceRoot` | - | Root directory to scan | `/Users/ashafi/Documents/work` |
-| `appGlobs` | - | Patterns to find applications | `["ai/ai_systems/apps/*"]` |
+| `workspaceRoot` | - | Root directory to scan | `/path/to/your/workspace` |
+| `appGlobs` | - | Patterns to find applications | `["apps/*", "packages/*"]` |
 | `ignore` | - | Patterns to ignore during scanning | Common build/cache dirs |
 | `queue.maxConcurrentSummaries` | - | Max parallel processing jobs | `3` |
 | `queue.summariesPerMinute` | - | Rate limit for AI summarization | `3` |
@@ -286,7 +286,7 @@ The server exposes the following MCP tools:
 ### Processing Pipeline
 
 ```mermaid
-%%{init: {"theme": "default", "themeVariables": {"primaryTextColor": "#111111", "secondaryTextColor": "#111111", "tertiaryTextColor": "#111111", "lineColor": "#1f2937", "fontSize": "14px"}} }%%
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#ffffff", "primaryTextColor": "#000000", "primaryBorderColor": "#000000", "lineColor": "#000000", "secondaryColor": "#f0f0f0", "tertiaryColor": "#ffffff", "background": "#ffffff", "mainBkg": "#ffffff", "secondaryTextColor": "#000000", "tertiaryTextColor": "#000000", "fontSize": "14px"}} }%%
 graph LR
     subgraph "Job Queue System"
         direction LR
@@ -330,8 +330,8 @@ Capsules are cached in the `cache/` directory with hex-encoded filenames:
 
 ```
 cache/
-├── capsule_2f55736572732f...636c617564652d746573742d67656e657261746f72.json
-├── capsule_2f55736572732f...6175746f6d6174696f6e2d7265706f732f6772632d7569.json
+├── capsule_2f70617468746f...796f7572617070732d7465737467656e657261746f72.json
+├── capsule_2f70617468746f...796f75726170707372657073677263756a.json
 └── telemetry.log
 ```
 
@@ -388,7 +388,7 @@ node debug-bootstrap.js [app-path]
     "name": "workspace.search_semantic",
     "arguments": {
       "query": "MCP protocol implementation",
-      "app": "/Users/ashafi/Documents/work/ai/ai_systems/apps/claude-test-generator",
+      "app": "/path/to/your/workspace/apps/your-app",
       "mode": "semantic",
       "top_k": 5
     }
