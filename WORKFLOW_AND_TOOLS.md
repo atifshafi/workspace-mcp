@@ -2,6 +2,134 @@
 
 This document explains, in depth, how the server discovers apps, builds metadata, generates and caches capsules, and serves fast hybrid search, along with a detailed reference for configuration and tools.
 
+## 📁 App Discovery: What Constitutes an "App"
+
+### 🔍 App Definition and Discovery Logic
+
+An **"app"** in Workspace MCP is any directory that matches the configured `appGlobs` patterns and contains project-like structure. The system doesn't make assumptions about what constitutes a project - it relies on your configuration.
+
+```mermaid
+flowchart TB
+    subgraph Config ["⚙️ Configuration"]
+        AppGlobs["📋 appGlobs<br/>['apps/*', 'tools/*', 'automation/*']"]
+        Ignore["🚫 ignore<br/>['node_modules', '.git', 'dist']"]
+        WorkspaceRoot["📁 workspaceRoot<br/>'/path/to/your/workspace'"]
+    end
+    
+    subgraph Discovery ["🔍 Discovery Process"]
+        Scan["🔍 Scan Workspace<br/>📁 Read workspaceRoot<br/>🔍 Apply appGlobs patterns<br/>🚫 Filter by ignore patterns"]
+        
+        Match["📋 Pattern Matching<br/>✅ 'apps/my-service' matches 'apps/*'<br/>✅ 'tools/cli-tool' matches 'tools/*'<br/>❌ 'node_modules/lib' ignored"]
+        
+        Validate["✔️ Validation<br/>📁 Must be directory<br/>📂 Must be readable<br/>🔍 Must exist on filesystem"]
+    end
+    
+    subgraph Result ["📋 App Registry"]
+        AppList["📝 Discovered Apps<br/>• /workspace/apps/auth-service<br/>• /workspace/apps/payment-api<br/>• /workspace/tools/cli-helper<br/>• /workspace/automation/scripts"]
+    end
+    
+    Config --> Discovery
+    Scan --> Match
+    Match --> Validate
+    Validate --> AppList
+    
+    classDef config fill:#e3f2fd,stroke:#2196f3,stroke-width:2px,color:#000
+    classDef discovery fill:#fff3e0,stroke:#ff9800,stroke-width:2px,color:#000
+    classDef result fill:#e8f5e8,stroke:#4caf50,stroke-width:2px,color:#000
+
+    class AppGlobs,Ignore,WorkspaceRoot config
+    class Scan,Match,Validate discovery
+    class AppList result
+```
+
+### 📋 App Discovery Examples
+
+| appGlobs Pattern | Workspace Structure | Discovered Apps | Notes |
+|------------------|---------------------|-----------------|-------|
+| `"apps/*"` | `/workspace/apps/auth/`<br/>`/workspace/apps/payment/` | 2 apps:<br/>• `auth`<br/>• `payment` | Each subdirectory becomes an app |
+| `"tools/*"` | `/workspace/tools/cli/`<br/>`/workspace/tools/scripts/` | 2 apps:<br/>• `cli`<br/>• `scripts` | Tools are treated as individual apps |
+| `"automation"` | `/workspace/automation/` | 1 app:<br/>• `automation` | Entire directory is one app |
+| `"*"` | `/workspace/projectA/`<br/>`/workspace/projectB/` | 2 apps:<br/>• `projectA`<br/>• `projectB` | Top-level scan (fallback) |
+
+### 🏗️ What Makes a Directory an "App"
+
+The system considers any directory an "app" if:
+
+1. **✅ Matches `appGlobs` pattern** - Defined in your configuration
+2. **✅ Not in `ignore` list** - Excludes `node_modules`, `.git`, etc.
+3. **✅ Is a directory** - Files are not considered apps
+4. **✅ Is readable** - System has filesystem access
+
+**Important**: The system does NOT require:
+- `package.json` or other project files
+- Specific folder structure (`src/`, `tests/`)
+- README or documentation
+- Any particular programming language
+
+### 🔄 App Lifecycle: From Discovery to Ready
+
+```mermaid
+flowchart LR
+    Discover["🔍 Discovery<br/>📋 Match appGlobs<br/>🚫 Apply ignore filters<br/>✔️ Validate existence"]
+    --> Enqueue["📋 Enqueue<br/>📊 Calculate priority<br/>⏱️ Add to job queue<br/>🚦 Rate limit"]
+    --> Process["🏭 Process<br/>🔍 Check if Git repo<br/>📝 Create metadata (non-Git)<br/>🧠 AI analysis<br/>💾 Build capsule"]
+    --> Cache["💾 Cache<br/>💾 Write to disk<br/>🧠 Load to memory<br/>📇 Build search index"]
+    --> Ready["✅ Ready<br/>🔍 Available for search<br/>🛠️ Exposed via MCP tools<br/>👁️ Watched for changes"]
+    
+    classDef discover fill:#e3f2fd,stroke:#2196f3,stroke-width:2px,color:#000
+    classDef queue fill:#fff3e0,stroke:#ff9800,stroke-width:2px,color:#000
+    classDef process fill:#f3e5f5,stroke:#9c27b0,stroke-width:2px,color:#000
+    classDef cache fill:#f1f8e9,stroke:#795548,stroke-width:2px,color:#000
+    classDef ready fill:#e8f5e8,stroke:#4caf50,stroke-width:2px,color:#000
+
+    class Discover discover
+    class Enqueue queue
+    class Process process
+    class Cache cache
+    class Ready ready
+```
+
+**Key Point**: An "app" is simply **any directory your configuration tells the system to analyze**. The intelligence comes from how the system processes and understands each discovered directory.
+
+### 💻 Code Implementation: How Apps Are Discovered
+
+```javascript
+// From index.js: listAppRoots() function
+function listAppRoots() {
+  const results = new Set();
+  for (const pattern of config.appGlobs || []) {
+    const matches = fg.sync(pattern, { 
+      cwd: WORKSPACE_ROOT, 
+      onlyDirectories: true, 
+      absolute: true, 
+      dot: true, 
+      ignore: config.ignore || [] 
+    });
+    for (const m of matches) results.add(m);
+  }
+  return Array.from(results);
+}
+```
+
+**What this code does:**
+1. **Iterates** through each pattern in `config.appGlobs`
+2. **Uses fast-glob** to find matching directories
+3. **Applies ignore filters** to exclude unwanted paths
+4. **Returns absolute paths** of all discovered apps
+5. **Deduplicates** if multiple patterns match the same directory
+
+### 🔄 When Apps Are "Created" (Processed)
+
+Apps are **discovered once** but **processed multiple times**:
+
+| Event | Trigger | Action | AI Usage |
+|-------|---------|--------|----------|
+| **🚀 Server Startup** | Initial scan | Discover + enqueue all apps | ✅ AI analysis |
+| **📝 File Changes** | Chokidar file watcher | Re-enqueue changed app | ✅ AI re-analysis |
+| **📊 Activity Promotion** | Every 5 minutes | Enqueue active apps | ✅ AI analysis |
+| **🔧 Manual Bootstrap** | `workspace.bootstrap` call | Force refresh specific app | ✅ AI analysis |
+| **🔍 Search Query** | `workspace.search_semantic` | Use existing capsule | ❌ No AI |
+
 ### High-Level Flow
 
 ```mermaid

@@ -63,7 +63,21 @@ WORKSPACE_MCP_ROOT=/custom/path npx workspace-mcp init
 
 ## 📖 Overview
 
-This MCP server provides intelligent workspace analysis through automatic project discovery, AI-powered summarization, and semantic search capabilities. It creates structured metadata for each application, enabling efficient code understanding and contextual search.
+This MCP server provides intelligent workspace analysis through configurable project discovery, AI-powered summarization, and semantic search capabilities. It creates structured metadata for each discovered application, enabling efficient code understanding and contextual search.
+
+### 📁 What is an "App"?
+
+An **"app"** is any directory that matches your configured `appGlobs` patterns. The system discovers apps by:
+
+1. **📋 Pattern Matching**: Uses glob patterns like `apps/*`, `tools/*`, `packages/*`
+2. **🚫 Filtering**: Excludes directories in the `ignore` list
+3. **✔️ Validation**: Confirms each match is a readable directory
+
+**Examples**: If you configure `appGlobs: ["apps/*", "tools/*"]`, then:
+- `/workspace/apps/auth-service/` → Discovered as "auth-service" app
+- `/workspace/apps/payment-api/` → Discovered as "payment-api" app  
+- `/workspace/tools/cli-helper/` → Discovered as "cli-helper" app
+- `/workspace/docs/` → Ignored (doesn't match patterns)
 
 ### 🎯 The Problem It Solves
 
