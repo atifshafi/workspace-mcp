@@ -1,0 +1,7 @@
+node_modules/
+cache/
+telemetry.log
+config.json
+.DS_Store
+*.log
+tmp_*

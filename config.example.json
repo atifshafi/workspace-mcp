@@ -1,0 +1,33 @@
+{
+  "workspaceRoot": "/ABSOLUTE/PATH/TO/YOUR/WORKSPACE",
+  "appGlobs": [
+    "apps/*",
+    "packages/*", 
+    "tools/*",
+    "automation/*",
+    "documentation/*",
+    "notes/*"
+  ],
+  "ignore": [
+    "**/node_modules/**","**/.git/**","**/.venv/**","**/.mypy_cache/**",
+    "**/dist/**","**/build/**","**/.next/**","**/.turbo/**","**/.cache/**",
+    "**/coverage/**","**/__snapshots__/**","**/.pytest_cache/**",
+    "**/*.png","**/*.jpg","**/*.jpeg","**/*.gif","**/*.mp4","**/*.zip",
+    "**/*.log","**/logs/**","**/tmp/**"
+  ],
+  "queue": { 
+    "maxConcurrentSummaries": 3, 
+    "summariesPerMinute": 3, 
+    "debounceMs": 750, 
+    "priorityPaths": [] 
+  },
+  "purpose": {
+    "limits": { "maxFiles": 25, "maxBytes": 350000, "chunkTokens": 3000, "timeoutMs": 8000 },
+    "gitRepoOverrides": { "maxFiles": 50, "maxBytes": 800000, "chunkTokens": 3800, "timeoutMs": 12000 }
+  },
+  "activity": { 
+    "enable": false, 
+    "sources": { "cursorIde": true, "cursorSessions": true, "fsMtime": true }, 
+    "promote": { "minScore": 3.0, "maxPerRoot": 20, "depthLimit": 2 } 
+  }
+}
