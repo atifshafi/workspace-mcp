@@ -1,46 +1,132 @@
-# Workspace MCP Server
+# 🧠 Workspace MCP Server
 
-> **A lightweight Model Context Protocol (MCP) server that builds intelligent workspace capsules and exposes workspace-aware tools for enhanced AI development workflows.**
+<div align="center">
 
-[![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
-[![MCP SDK](https://img.shields.io/badge/MCP%20SDK-1.17.5-blue.svg)](https://github.com/modelcontextprotocol/typescript-sdk)
-[![License](https://img.shields.io/badge/License-ISC-yellow.svg)](LICENSE)
+**🚀 Intelligent workspace analysis powered by AI • Zero-config setup • Lightning-fast semantic search**
+
+[![Node.js](https://img.shields.io/badge/Node.js-18+-brightgreen.svg?style=for-the-badge&logo=node.js)](https://nodejs.org/)
+[![MCP Protocol](https://img.shields.io/badge/MCP%20Protocol-2024--11--05-blue.svg?style=for-the-badge)](https://github.com/modelcontextprotocol/typescript-sdk)
+[![AI Powered](https://img.shields.io/badge/AI%20Powered-Gemini%20%7C%20OpenAI-orange.svg?style=for-the-badge&logo=google)](https://ai.google.dev/)
+[![License](https://img.shields.io/badge/License-ISC-yellow.svg?style=for-the-badge)](LICENSE)
+
+</div>
+
+---
+
+## ✨ What Makes This Special
+
+🧠 **AI-Powered Intelligence** • Automatically understands your codebase structure and purpose  
+⚡ **Zero Configuration** • Smart workspace detection with one command setup  
+🔍 **Hybrid Search** • Combines keyword + semantic search for precise results  
+🏗️ **Intelligent Caching** • Builds lightweight "capsules" for lightning-fast queries  
+🎯 **Activity-Aware** • Prioritizes your most-used projects automatically  
+🔒 **Privacy-First** • Local processing with optional AI enhancement
 
 ## 🚀 Quick Start
 
-```bash
-# Install dependencies
-npm install
+<div align="center">
 
-# Generate config.json (no overwrite)
+**Three commands to transform your development workflow:**
+
+</div>
+
+```bash
+# 1️⃣ Clone and install
+git clone https://github.com/YOUR_USERNAME/workspace-mcp.git
+cd workspace-mcp && npm install
+
+# 2️⃣ Smart auto-configuration (detects your workspace structure)
 npx workspace-mcp init
 
-# Start the MCP server
+# 3️⃣ Start the intelligent MCP server
 npx workspace-mcp start
+```
 
-# Optional: analyze workspace without writing config
+<details>
+<summary>🔧 <strong>Advanced Options</strong></summary>
+
+```bash
+# Preview configuration without writing
 npx workspace-mcp analyze --dry-run
 
-# Development mode with auto-reload (alternative to CLI start)
+# Development mode with auto-reload
 npm run dev
+
+# Test AI integration
+node test_ai.js
+
+# Override workspace root
+WORKSPACE_MCP_ROOT=/custom/path npx workspace-mcp init
 ```
+
+</details>
 
 ## 📖 Overview
 
-The Workspace MCP Server is an intelligent workspace analysis tool that automatically discovers, indexes, and provides semantic search capabilities across your development projects. It creates lightweight "capsules" for each application in your workspace, enabling AI assistants to understand your codebase structure and provide more contextual assistance.
+Transform your development workflow with **intelligent workspace understanding**. This MCP server automatically discovers, analyzes, and indexes your projects using AI-powered summarization, creating a semantic search engine that understands your code's purpose and structure.
 
-By default, it uses an external AI summarization adapter to craft concise app purposes (configurable). If disabled, it falls back to a fully local heuristic.
+### 🎯 The Problem It Solves
 
-### Key Features
+Traditional code search is limited to exact text matching. When you ask "Where is user authentication handled?" or "How does the payment flow work?", you end up manually searching through dozens of files. 
 
-- 🔍 **Automatic App Discovery** - Scans workspace using configurable glob patterns
-- 🧠 **Intelligent Capsule Generation** - Creates structured summaries of applications
-- 🔄 **Real-time File Watching** - Updates capsules when files change
-- 🎯 **Activity-based Prioritization** - Promotes frequently used apps
-- 🔎 **Hybrid Search** - Combines BM25 and semantic search for optimal results
-- ⚡ **Rate-limited Processing** - Prevents system overload with queue management
-- 🏗️ **Git-aware Indexing** - Different budgets for git vs non-git projects
- - 🤖 **Pluggable AI Summarization (default ON)** - External adapter with easy env-based disable
+**Workspace MCP changes that.** It understands your codebase semantically, so you can ask conceptual questions and get precise answers instantly.
+
+### 🧠 How It Works
+
+```mermaid
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#ffffff", "primaryTextColor": "#000000", "primaryBorderColor": "#000000", "lineColor": "#000000", "background": "#ffffff"}} }%%
+graph LR
+    A[📁 Your Workspace] --> B[🔍 AI Analysis]
+    B --> C[📦 Smart Capsules]
+    C --> D[⚡ Instant Search]
+    
+    style A fill:#e3f2fd,color:#000,stroke:#000
+    style B fill:#fff3e0,color:#000,stroke:#000
+    style C fill:#f3e5f5,color:#000,stroke:#000
+    style D fill:#e8f5e8,color:#000,stroke:#000
+```
+
+1. **🔍 Discovers** your projects automatically using smart glob patterns
+2. **🧠 Analyzes** each app with AI to understand its purpose and structure  
+3. **📦 Creates** lightweight "capsules" with metadata, docs, tests, and entrypoints
+4. **⚡ Serves** lightning-fast semantic search through MCP protocol
+
+## 🌟 Key Features
+
+<table>
+<tr>
+<td width="50%">
+
+### 🧠 **AI-Powered Analysis**
+- **Smart Purpose Detection** using Gemini/OpenAI
+- **Automatic Code Understanding** 
+- **Intelligent Project Classification**
+- **Context-Aware Summarization**
+
+### ⚡ **Lightning Performance**
+- **Intelligent Caching System**
+- **Hybrid Search (BM25 + Semantic)**
+- **Activity-Based Prioritization**
+- **Real-time File Watching**
+
+</td>
+<td width="50%">
+
+### 🎯 **Zero-Config Setup**
+- **Auto-Workspace Detection**
+- **Smart Glob Pattern Suggestions**
+- **Git-Aware Processing**
+- **One-Command Installation**
+
+### 🔒 **Privacy & Security**
+- **Local-First Processing**
+- **Workspace Boundary Protection**
+- **Optional AI Enhancement**
+- **No Data Lock-in**
+
+</td>
+</tr>
+</table>
 
 ## 🏗️ Architecture
 
@@ -495,20 +581,45 @@ workspace-mcp/
 
 This project is licensed under the ISC License - see the [LICENSE](LICENSE) file for details.
 
-## 🤝 Support
+## 🚀 Ready to Share?
 
-For questions, issues, or contributions:
+This project is ready for GitHub! Here's how to publish:
 
-1. Check existing [Issues](../../issues)
-2. Create a new issue with detailed information
-3. Join the discussion in [Discussions](../../discussions)
+```bash
+# Create GitHub repository
+gh repo create workspace-mcp --public --source=. --push
+
+# Or manually:
+# 1. Create repo at https://github.com/new
+# 2. Then:
+git remote add origin https://github.com/YOUR_USERNAME/workspace-mcp.git
+git push -u origin main
+```
+
+## 🤝 Support & Community
+
+<div align="center">
+
+[![GitHub Issues](https://img.shields.io/badge/Issues-Welcome-brightgreen.svg?style=for-the-badge&logo=github)](../../issues)
+[![Discussions](https://img.shields.io/badge/Discussions-Join%20Us-blue.svg?style=for-the-badge&logo=github)](../../discussions)
+[![Contributing](https://img.shields.io/badge/Contributing-Guide-purple.svg?style=for-the-badge)](CONTRIBUTING.md)
+
+</div>
+
+### 📚 Documentation
+
+- **[WORKFLOW_AND_TOOLS.md](WORKFLOW_AND_TOOLS.md)** - Deep dive into architecture and tooling
+- **[config.example.json](config.example.json)** - Configuration reference
+- **[test_ai.js](test_ai.js)** - AI integration testing
 
 ---
 
 <div align="center">
 
-**Built with ❤️ for enhanced AI-assisted development workflows**
+**🧠 Built with AI • ⚡ Powered by Intelligence • 🚀 Made for Developers**
 
-[Documentation](docs/) • [Examples](examples/) • [Contributing](CONTRIBUTING.md)
+*Transform your development workflow with intelligent workspace understanding*
+
+[![Star this repo](https://img.shields.io/badge/⭐-Star%20this%20repo-yellow.svg?style=for-the-badge)](../../stargazers)
 
 </div>
