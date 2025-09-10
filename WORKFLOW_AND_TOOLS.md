@@ -44,7 +44,7 @@ graph TB
     class Tools tools
 ```
 
-## 🧠 The Intelligence Behind Speed: How Capsules Transform AI Efficiency
+## 🧠 Capsule-Based Architecture: Optimizing AI Service Performance
 
 ### The Problem: Brute Force Workspace Scanning
 
@@ -627,7 +627,7 @@ flowchart LR
         API["🔑 API Key Present<br/>(GOOGLE_API_KEY or OPENAI_API_KEY)"]
         --> Call["📞 API Call<br/>📄 Send representative snippets<br/>🧠 Get intelligent analysis"]
         --> Parse["📝 Parse Response<br/>🎯 Extract purpose<br/>📊 Assign confidence<br/>🏷️ Classify role"]
-        --> Enhanced["🌟 Enhanced Capsule<br/>🎯 AI-generated purpose<br/>📊 Confidence: 0.8-0.9<br/>📄 Evidence paths"]
+        --> AIGenerated["🌟 AI-Generated Capsule<br/>🎯 AI-generated purpose<br/>📊 Confidence: 0.8-0.9<br/>📄 Evidence paths"]
     end
     
     subgraph Unavailable ["❌ AI Service Unavailable"]
@@ -638,12 +638,12 @@ flowchart LR
     
     classDef available fill:#e8f5e8,stroke:#4caf50,stroke-width:2px,color:#000
     classDef unavailable fill:#fff3e0,stroke:#ff9800,stroke-width:2px,color:#000
-    classDef enhanced fill:#e8f5e8,stroke:#4caf50,stroke-width:3px,color:#000
+    classDef aigenerated fill:#e8f5e8,stroke:#4caf50,stroke-width:3px,color:#000
     classDef basic fill:#f5f5f5,stroke:#9e9e9e,stroke-width:2px,color:#000
 
     class API,Call,Parse available
     class NoAPI,Heuristic unavailable
-    class Enhanced enhanced
+    class AIGenerated aigenerated
     class Basic basic
 ```
 

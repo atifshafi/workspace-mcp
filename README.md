@@ -2,7 +2,7 @@
 
 <div align="center">
 
-**🚀 Intelligent workspace analysis powered by AI • Zero-config setup • Lightning-fast semantic search**
+**Intelligent workspace analysis server with AI-powered indexing and semantic search capabilities**
 
 [![Node.js](https://img.shields.io/badge/Node.js-18+-brightgreen.svg?style=for-the-badge&logo=node.js)](https://nodejs.org/)
 [![MCP Protocol](https://img.shields.io/badge/MCP%20Protocol-2024--11--05-blue.svg?style=for-the-badge)](https://github.com/modelcontextprotocol/typescript-sdk)
@@ -20,13 +20,13 @@
 🔍 **Hybrid Search** • Combines keyword + semantic search for precise results  
 🏗️ **Intelligent Caching** • Builds lightweight "capsules" for lightning-fast queries  
 🎯 **Activity-Aware** • Prioritizes your most-used projects automatically  
-🔒 **Privacy-First** • Local processing with optional AI enhancement
+🔒 **Privacy-First** • Local processing with configurable AI integration
 
 ## 🚀 Quick Start
 
 <div align="center">
 
-**Three commands to transform your development workflow:**
+**Three commands to set up workspace analysis:**
 
 </div>
 
@@ -63,13 +63,13 @@ WORKSPACE_MCP_ROOT=/custom/path npx workspace-mcp init
 
 ## 📖 Overview
 
-Transform your development workflow with **intelligent workspace understanding**. This MCP server automatically discovers, analyzes, and indexes your projects using AI-powered summarization, creating a semantic search engine that understands your code's purpose and structure.
+This MCP server provides intelligent workspace analysis through automatic project discovery, AI-powered summarization, and semantic search capabilities. It creates structured metadata for each application, enabling efficient code understanding and contextual search.
 
 ### 🎯 The Problem It Solves
 
 Traditional code search is limited to exact text matching. When you ask "Where is user authentication handled?" or "How does the payment flow work?", you end up manually searching through dozens of files. 
 
-**Workspace MCP changes that.** It understands your codebase semantically, so you can ask conceptual questions and get precise answers instantly.
+**This server addresses that limitation** by providing semantic understanding of codebases, enabling conceptual queries with precise, targeted results.
 
 ### 🧠 How It Works
 
@@ -125,7 +125,7 @@ flowchart LR
 ### 🔒 **Privacy & Security**
 - **Local-First Processing**
 - **Workspace Boundary Protection**
-- **Optional AI Enhancement**
+- **Configurable AI Integration**
 - **No Data Lock-in**
 
 </td>
@@ -594,7 +594,7 @@ workspace-mcp/
 
 ## 📈 Roadmap
 
-- [ ] **Enhanced AI Summarization** - Integration with external LLM APIs
+- [ ] **Extended AI Integration** - Additional LLM provider support
 - [ ] **Real-time Collaboration** - Multi-user workspace support  
 - [ ] **Advanced Analytics** - Usage patterns and code quality metrics
 - [ ] **Plugin System** - Custom analyzers and extractors
@@ -640,9 +640,9 @@ git push -u origin main
 
 <div align="center">
 
-**🧠 Built with AI • ⚡ Powered by Intelligence • 🚀 Made for Developers**
+**Model Context Protocol server with AI-powered workspace analysis**
 
-*Transform your development workflow with intelligent workspace understanding*
+*Intelligent workspace analysis for improved development efficiency*
 
 [![Star this repo](https://img.shields.io/badge/⭐-Star%20this%20repo-yellow.svg?style=for-the-badge)](../../stargazers)
 
