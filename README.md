@@ -29,6 +29,8 @@ npm run dev
 
 The Workspace MCP Server is an intelligent workspace analysis tool that automatically discovers, indexes, and provides semantic search capabilities across your development projects. It creates lightweight "capsules" for each application in your workspace, enabling AI assistants to understand your codebase structure and provide more contextual assistance.
 
+By default, it uses an external AI summarization adapter to craft concise app purposes (configurable). If disabled, it falls back to a fully local heuristic.
+
 ### Key Features
 
 - 🔍 **Automatic App Discovery** - Scans workspace using configurable glob patterns
@@ -38,6 +40,7 @@ The Workspace MCP Server is an intelligent workspace analysis tool that automati
 - 🔎 **Hybrid Search** - Combines BM25 and semantic search for optimal results
 - ⚡ **Rate-limited Processing** - Prevents system overload with queue management
 - 🏗️ **Git-aware Indexing** - Different budgets for git vs non-git projects
+ - 🤖 **Pluggable AI Summarization (default ON)** - External adapter with easy env-based disable
 
 ## 🏗️ Architecture
 
@@ -246,6 +249,33 @@ graph LR
 | `purpose.limits.maxBytes` | - | Max bytes to process per app | `350000` |
 | `activity.enable` | - | Enable activity-based promotion | `true` |
 | `activity.promote.minScore` | - | Min score for promotion | `3.0` |
+
+### AI Summarization (default: Gemini → OpenAI → local)
+
+- Enabled by default. To disable:
+```bash
+export WORKSPACE_MCP_AI=disabled
+# or
+export WORKSPACE_MCP_AI_DISABLE=1
+```
+- To use Gemini CLI (default priority):
+```bash
+export WORKSPACE_MCP_GEMINI_CLI=gemini
+export WORKSPACE_MCP_GEMINI_MODEL=gemini-1.5-flash
+export GOOGLE_API_KEY=your-gemini-api-key
+# Optional custom args template (tokens: {MODEL}, {PROMPT})
+# export WORKSPACE_MCP_GEMINI_ARGS="-m {MODEL} generate -p {PROMPT}"
+```
+- OpenAI fallback:
+```bash
+export OPENAI_API_KEY=sk-...
+export WORKSPACE_MCP_AI_MODEL=gpt-4o-mini
+```
+- Custom endpoint (lowest priority):
+```bash
+export WORKSPACE_MCP_AI_ENDPOINT=https://your-ai-endpoint/summarize
+export WORKSPACE_MCP_AI_AUTH="Bearer <TOKEN>"   # optional
+```
 
 ## 🛠️ Available Tools
 

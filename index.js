@@ -4,6 +4,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod';
 import chokidar from 'chokidar';
 import fs from 'fs';
+import { spawn } from 'child_process';
 import path from 'path';
 import fg from 'fast-glob';
 import picomatch from 'picomatch';
@@ -44,13 +45,130 @@ async function ensureMetadataFile(appPath) {
   try { fs.renameSync(tmp, metaPath); } catch { try { fs.unlinkSync(tmp); } catch {} }
 }
 
-// --- AI summarization via MCP sampling (stub; replace with real when available) ---
+// --- AI summarization adapter (enabled by default; can be disabled via env) ---
+async function collectRepresentativeSnippets(appPath, limits){
+  const maxFiles = Math.max(1, Math.min(10, limits.maxFiles||10));
+  const files = listCodeFiles(appPath).slice(0, maxFiles);
+  const snippets = [];
+  for (const f of files.slice(0, 8)){
+    try {
+      const text = isLargeFile(f) ? readLargeFileSummary(f) : fs.readFileSync(f,'utf8');
+      snippets.push({ path: f, text: text.slice(0, 2000) });
+    } catch {}
+  }
+  return snippets;
+}
+
+async function execCommand(command, args, input, timeoutMs = 20000){
+  return new Promise((resolve) => {
+    try {
+      const child = spawn(command, args, { stdio: ['pipe','pipe','pipe'] });
+      let out = '', err = '';
+      const t = setTimeout(() => { try { child.kill(); } catch {} }, timeoutMs);
+      child.stdout.on('data', d => out += String(d));
+      child.stderr.on('data', d => err += String(d));
+      child.on('exit', () => { clearTimeout(t); resolve(out?.trim() || null); });
+      if (input) child.stdin.write(input);
+      child.stdin.end();
+    } catch { resolve(null); }
+  });
+}
+
+async function tryGeminiCli(appPath, limits){
+  try {
+    const disabled = (process.env.WORKSPACE_MCP_AI === 'disabled') || (process.env.WORKSPACE_MCP_AI_DISABLE === '1');
+    if (disabled) return null;
+    
+    // Check if Gemini API key is available
+    if (!process.env.GOOGLE_API_KEY) return null;
+    
+    const cmd = process.env.WORKSPACE_MCP_GEMINI_CLI || 'gemini';
+    const model = process.env.WORKSPACE_MCP_GEMINI_MODEL || 'gemini-1.5-flash';
+    const argsTpl = process.env.WORKSPACE_MCP_GEMINI_ARGS; // e.g., "-m {MODEL} generate -p {PROMPT}"
+    const snippets = await collectRepresentativeSnippets(appPath, limits);
+    if (snippets.length === 0) return null;
+    const prompt = `Summarize this app as a single sentence purpose. Return only the sentence. Files:` +
+      snippets.map(s=>`\n### ${path.basename(s.path)}\n${s.text}`).join('\n');
+    let args;
+    if (argsTpl) {
+      args = argsTpl
+        .replaceAll('{MODEL}', model)
+        .replaceAll('{PROMPT}', prompt)
+        .split(' ');
+    } else {
+      // Default assumption for a gemini CLI: gemini -m <model> generate -p <prompt>
+      args = ['-m', model, 'generate', '-p', prompt];
+    }
+    const result = await execCommand(cmd, args, null, 25000);
+    const text = result?.trim();
+    if (text) {
+      return { purpose: text, role: 'mixed', confidence: 0.8, evidence_paths: snippets.map(s=>s.path).slice(0,5) };
+    }
+  } catch {}
+  return null;
+}
+
+async function externalSummarizeApp(appPath, limits){
+  try {
+    const disabled = (process.env.WORKSPACE_MCP_AI === 'disabled') || (process.env.WORKSPACE_MCP_AI_DISABLE === '1');
+    if (disabled) return null;
+    // Priority 1: Gemini CLI
+    const gemini = await tryGeminiCli(appPath, limits);
+    if (gemini) return gemini;
+
+    // Priority 2: OpenAI Chat Completions if API key present
+    if (process.env.OPENAI_API_KEY){
+      const model = process.env.WORKSPACE_MCP_AI_MODEL || 'gpt-4o-mini';
+      const snippets = await collectRepresentativeSnippets(appPath, limits);
+      if (snippets.length === 0) return null;
+      const prompt = `Summarize this app as a single sentence purpose. Return only the sentence. Files: ` +
+        snippets.map(s=>`\n### ${path.basename(s.path)}\n${s.text}`).join('\n');
+      const res = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'content-type':'application/json', 'authorization': `Bearer ${process.env.OPENAI_API_KEY}` },
+        body: JSON.stringify({ model, messages: [ { role: 'system', content: 'You are a concise software documentation assistant.' }, { role: 'user', content: prompt } ], temperature: 0.2 })
+      });
+      if (res.ok){
+        const data = await res.json();
+        const content = data?.choices?.[0]?.message?.content?.trim();
+        if (content){
+          return { purpose: content, role: 'mixed', confidence: 0.8, evidence_paths: snippets.map(s=>s.path).slice(0,5) };
+        }
+      }
+    }
+
+    // Priority 3: Generic HTTP endpoint (optional)
+    const endpoint = process.env.WORKSPACE_MCP_AI_ENDPOINT;
+    if (endpoint){
+      const snippets = await collectRepresentativeSnippets(appPath, limits);
+      if (snippets.length === 0) return null;
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', ...(process.env.WORKSPACE_MCP_AI_AUTH ? { 'authorization': process.env.WORKSPACE_MCP_AI_AUTH } : {}) },
+        body: JSON.stringify({ app: appPath, snippets, limits })
+      });
+      if (res.ok){
+        const data = await res.json();
+        if (data && (data.purpose || data.summary)){
+          return {
+            purpose: data.purpose || data.summary,
+            role: data.role || 'mixed',
+            confidence: data.confidence ?? 0.7,
+            evidence_paths: snippets.map(s=>s.path).slice(0,5)
+          };
+        }
+      }
+    }
+  } catch {}
+  return null; // fall back to local
+}
+
 async function aiSummarizeApp(appPath, limits) {
-  // Minimal stub: collect small representative snippets; call no external model yet.
-  // In your environment, wire to MCP sampling client here.
-  const files = listCodeFiles(appPath).slice(0, Math.max(1, Math.min(10, limits.maxFiles)));
+  // Default: try external adapter unless disabled; fall back to local heuristic
+  const external = await externalSummarizeApp(appPath, limits);
+  if (external) return external;
+  const files = listCodeFiles(appPath).slice(0, Math.max(1, Math.min(10, limits.maxFiles||10)));
   const evidence_paths = files.slice(0, 5);
-  // Placeholder purpose composed from app name
   const purpose = `Workspace unit ${path.basename(appPath)} summarized from ${evidence_paths.length} files`;
   return { purpose, role: 'mixed', confidence: 0.6, evidence_paths };
 }
